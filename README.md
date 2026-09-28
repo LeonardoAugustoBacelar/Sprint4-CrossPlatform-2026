@@ -352,9 +352,11 @@ manipulação de string em `src/utils/data.ts`.
 | `tests/vegetacao.test.ts` | Alvo contextual (40/25/50), inversão do critério entre acostamento e talude, formatação de km e extensão |
 | `tests/utils.test.ts` | Validação de data (mês inválido, dia inexistente, ano bissexto), máscara progressiva, formatação pt-BR sem deslocamento de fuso, normalização de acentos na busca |
 
-**Testes manuais** — a bateria de 14 casos está em
-[`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md), com cenário testado e resultado
-esperado para cada um, mais os defeitos já corrigidos nesta Sprint.
+**Testes manuais** — a bateria de **14 casos** está em
+[`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md), com cenário testado, resultado
+esperado, resultado obtido e status, mais os defeitos corrigidos nesta Sprint.
+
+Resultado da última execução: **14 casos, 14 aprovados**, sem exceção fatal no `logcat`.
 
 ### Ambiente de execução
 
@@ -415,7 +417,7 @@ monitoramento da vegetação nas rodovias. A Sprint 4 corrigiu isso:
   em emulador Android. A mudança em relação à Sprint 3 é de natureza, não de grau: lá os
   testes rodaram na build web, que é um runtime diferente do aplicativo; aqui roda o
   próprio binário publicado. Isso habilitou dois casos que não existiam no navegador —
-  persistência após encerrar o app e botão voltar do Android.
+  persistência após encerrar o app e botão voltar do Android —, e os 14 casos passaram.
 - **As pendências da Sprint 3 foram fechadas:** persistência local, botão voltar do
   Android e testes automatizados.
 
