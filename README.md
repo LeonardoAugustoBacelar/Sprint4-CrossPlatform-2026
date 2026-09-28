@@ -1,39 +1,130 @@
-# Motiva — Aplicativo de Registro de Ocorrências
+# Motiva — Gestão de Vegetação na Faixa de Domínio
 
-Aplicativo mobile em **React Native + Expo + TypeScript + NativeWind** para registro,
-acompanhamento e tratativa de ocorrências de risco em ambientes de trabalho e em
-operações de campo.
+Aplicativo mobile em **React Native + Expo + TypeScript + NativeWind** para o
+monitoramento da vegetação na faixa de domínio de rodovias concessionadas: mede a
+vegetação por trecho, ordena a fila de roçada por prioridade e mantém o histórico de
+intervenções de cada ponto da malha.
 
-**Sprint 3 — Protótipo Funcional Completo.** Todos os fluxos previstos estão implementados
-e navegáveis sobre uma camada de dados simulada que cobre sucesso, erro, lista vazia e
-carregamento lento.
+**Sprint 4 — Versão Final, APK e Plano de Negócio.**
 
 **Stack:** React Native 0.81 · Expo SDK 54 · React 19 · TypeScript 5.9 · NativeWind 4
 
 ---
 
+## Entregas da Sprint 4
+
+| Item | Onde está |
+|---|---|
+| 📦 **APK para Android** | _(inserir o link de download antes da entrega)_ |
+| 🎬 **Vídeo de pitch e demonstração** | _(inserir o link do YouTube não listado)_ |
+| 📊 **Plano de negócio** | [`docs/PLANO-DE-NEGOCIO.md`](docs/PLANO-DE-NEGOCIO.md) |
+| 🧪 **Documento de testes** | [`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md) |
+| 🎥 **Roteiro do vídeo** | [`docs/ROTEIRO-VIDEO.md`](docs/ROTEIRO-VIDEO.md) |
+
+---
+
 ## Índice
 
-- [Como rodar](#como-rodar)
+- [O problema e a solução](#o-problema-e-a-solução)
+- [Instalação do APK](#instalação-do-apk)
 - [O que o app faz](#o-que-o-app-faz)
-- [Status das funcionalidades](#status-das-funcionalidades)
+- [Como rodar o projeto](#como-rodar-o-projeto)
+- [Como gerar o APK](#como-gerar-o-apk)
+- [Modelagem de dados](#modelagem-de-dados)
 - [Como os dados estão mockados](#como-os-dados-estão-mockados)
 - [Estrutura do projeto](#estrutura-do-projeto)
-- [Decisões técnicas da Sprint 3](#decisões-técnicas-da-sprint-3)
+- [Decisões técnicas](#decisões-técnicas)
 - [Testes](#testes)
-- [Pendências identificadas](#pendências-identificadas)
-- [Plano de ajustes para a Sprint 4](#plano-de-ajustes-para-a-sprint-4)
+- [Evolução por Sprint](#evolução-por-sprint)
+- [Plano de negócio](#plano-de-negócio)
 - [Participantes](#participantes)
 
 ---
 
-## Como rodar
+## O problema e a solução
+
+A vegetação na faixa de domínio é tratada por **cronograma fixo**: a roçada acontece
+em data marcada, não quando o trecho precisa. O resultado são dois erros simultâneos —
+roçada onde ainda não era necessário e trecho crítico esperando a vez, com vegetação
+obstruindo sinalização ou talude descoberto em risco de erosão.
+
+O aplicativo substitui o cronograma por uma **fila de prioridade baseada em medição**.
+Cada trecho da malha tem uma leitura de vegetação, um alvo próprio e uma prioridade
+calculada; a lista chega ordenada de forma que o trecho mais crítico apareça primeiro.
+
+**A regra que dá sentido ao produto** é que o critério se inverte conforme o tipo de área:
+
+| Tipo de área | O que se mede | Risco cresce quando | Alvo |
+|---|---|---|---|
+| **Acostamento** | Altura da vegetação, em cm | A vegetação fica **alta** | 40 cm — ou **25 cm** se a causa for visibilidade |
+| **Talude** | Cobertura vegetal do solo, em % | A cobertura fica **baixa** | 50% |
+
+O alvo de 25 cm para trechos de visibilidade (curva de raio reduzido ou proximidade de
+placa) é o ponto central: tratar 40 cm como limiar universal mascara risco real, porque
+nesses trechos a vegetação já obstrui bem antes. A regra está em
+[`src/utils/vegetacao.ts`](src/utils/vegetacao.ts) e é coberta por testes automatizados.
+
+---
+
+## Instalação do APK
+
+1. Baixe o arquivo `.apk` pelo link na seção [Entregas da Sprint 4](#entregas-da-sprint-4).
+2. No Android, abra o arquivo baixado. O sistema vai pedir permissão para instalar
+   aplicativos de fonte desconhecida — em **Configurações → Apps → Acesso especial →
+   Instalar apps desconhecidos**, autorize o navegador ou o gerenciador de arquivos.
+3. Confirme a instalação e abra o app **Motiva**.
+
+**Requisitos:** Android 7.0 (API 24) ou superior. O aplicativo funciona sem conexão:
+os dados ficam gravados no próprio dispositivo.
+
+---
+
+## O que o app faz
+
+### Lista de trechos monitorados (Home)
+
+Listagem ordenada por prioridade — os trechos críticos aparecem primeiro, que é a
+ordem da fila de roçada. Traz seletor de rodovia (as três malhas do piloto), busca
+textual e filtro por prioridade com contagem por faixa. Cada card mostra o trecho, a
+rodovia, a quilometragem, a causa do alerta, o tipo de área e a leitura contra o alvo.
+
+A tela trata cinco situações distintas: carregando, erro de carga, base vazia, busca
+sem resultado e lista preenchida.
+
+### Detalhe do trecho
+
+Reúne o estado atual — localização com coordenada, tipo de área, última leitura, alvo,
+prioridade, causa do alerta e ação recomendada — e o **histórico de intervenções**
+executadas naquele ponto.
+
+### Registro de leitura
+
+Atualiza a medição de vegetação do trecho. A unidade, o texto de apoio e os limites de
+validação mudam conforme o tipo de área: até 300 cm no acostamento, 0 a 100% no talude.
+Alterar a causa para *visibilidade* endurece o alvo de 40 cm para 25 cm e pode
+reclassificar o trecho na hora.
+
+### Histórico de intervenções (CRUD completo)
+
+Cadastro, edição e exclusão de intervenções: roçada mecânica, roçada preventiva,
+hidrossemeadura, desobstrução de drenagem e monitoramento sem intervenção. Cada
+registro guarda motivo, data e o resultado medido em campo (`62 cm → 9 cm`).
+A exclusão passa por um diálogo de confirmação próprio.
+
+### Simulação de cenários
+
+Painel na Home que troca o comportamento da API simulada em tempo de execução, para
+demonstrar os estados que dados estáticos nunca produziriam. Ver [a seção adiante](#como-os-dados-estão-mockados).
+
+---
+
+## Como rodar o projeto
 
 **Pré-requisitos:** Node.js 18+, pnpm e um emulador Android/iOS ou o app Expo Go.
 
 ```bash
 pnpm install     # instala as dependências
-pnpm dev         # sobe o Metro (e o servidor de apoio do template)
+pnpm dev         # sobe o Metro
 ```
 
 Com o Metro no ar:
@@ -41,96 +132,93 @@ Com o Metro no ar:
 - `a` no terminal abre no emulador Android
 - `i` abre no simulador iOS
 - ler o QR Code com o Expo Go abre em dispositivo físico
-- o app também roda no navegador, útil para inspeção rápida
 
-Comandos auxiliares: `pnpm check` (typecheck), `pnpm lint`, `pnpm android`, `pnpm ios`.
-
----
-
-## O que o app faz
-
-### Lista de ocorrências (Home)
-
-Listagem completa com contagem no cabeçalho, busca textual, filtro por nível de risco e
-rolagem com *pull-to-refresh*. Cada card traz descrição, local, nível de risco, situação e
-data. A tela trata cinco situações distintas: carregando, erro de carga, base vazia, busca
-sem resultado e lista preenchida.
-
-### Cadastro e edição
-
-O mesmo formulário atende aos dois fluxos. Valida descrição (mínimo de 10 caracteres),
-local, e data — que usa máscara progressiva e recusa datas inexistentes ou futuras.
-Enquanto salva, o botão exibe estado de carregamento; se a gravação falhar, um aviso de
-erro aparece no topo e os dados digitados são preservados.
-
-### Detalhe e tratativa
-
-Exibe o registro completo e concentra as ações: editar, alternar a situação entre *aberta*
-e *resolvida*, e excluir. A exclusão passa por um diálogo de confirmação próprio.
-
-### Simulação de cenários
-
-Painel na Home que troca o comportamento da API simulada em tempo de execução, para
-demonstrar os estados que dados estáticos nunca produziriam. Ver a seção seguinte.
+Comandos auxiliares: `pnpm check` (typecheck), `pnpm lint`, `pnpm test`, `pnpm web`.
 
 ---
 
-## Status das funcionalidades
+## Como gerar o APK
 
-| Funcionalidade | Status | Observação |
-|---|---|---|
-| Listagem de ocorrências | ✅ Completo | Com contagem, rolagem e *pull-to-refresh* |
-| Estado de carregamento | ✅ Completo | Indicador na carga inicial e na troca de cenário |
-| Estado de erro com nova tentativa | ✅ Completo | Mensagem da API simulada e botão "Tentar novamente" |
-| Estado de lista vazia | ✅ Completo | Distinto do estado de busca sem resultado |
-| Busca textual | ✅ Completo | Por descrição e local, ignorando acentuação |
-| Filtro por nível de risco | ✅ Completo | Chips com contagem por faixa |
-| Cadastro de ocorrência | ✅ Completo | Com validação por campo e máscara de data |
-| Edição de ocorrência | ✅ Completo | Formulário reaproveitado, já preenchido |
-| Exclusão com confirmação | ✅ Completo | Diálogo próprio, funciona em Android, iOS e web |
-| Alternar situação (aberta/resolvida) | ✅ Completo | Refletido na listagem |
-| Detalhe da ocorrência | ✅ Completo | Todos os campos, com selos de risco e situação |
-| Simulação de cenários de mock | ✅ Completo | Sucesso, lista vazia, erro e carregamento lento |
-| Tema claro/escuro | ✅ Completo | Cores resolvidas por tema, inclusive nos selos |
-| Persistência local dos dados | ❌ Pendente | Dados em memória; previsto para a Sprint 4 |
-| Integração com API real | ❌ Pendente | Camada de serviço pronta para a troca |
-| Autenticação de usuário | ❌ Pendente | Fora do escopo das Sprints anteriores |
-| Seletor de data nativo | ❌ Pendente | Hoje a entrada é digitada com máscara |
-| Anexo de foto na ocorrência | ❌ Pendente | Avaliado para a Sprint 4 |
+O build é feito pelo **Expo EAS Build**, configurado em [`eas.json`](eas.json). O perfil
+`preview` gera um `.apk` instalável diretamente (o perfil `production` gera `.aab`, para
+a Play Store).
+
+```bash
+npx eas-cli login                 # conta Expo do grupo
+npx eas-cli build:configure       # apenas na primeira vez
+pnpm build:apk                    # = eas build --platform android --profile preview
+```
+
+O build roda nos servidores da Expo; ao final, o terminal devolve o link de download do
+APK. **O binário não é commitado no repositório** — o link de download fica na seção
+[Entregas da Sprint 4](#entregas-da-sprint-4).
+
+---
+
+## Modelagem de dados
+
+Duas entidades, definidas em [`src/types/index.ts`](src/types/index.ts):
+
+```
+Trecho                             Intervencao
+├── id           "TR-12"           ├── id
+├── rodoviaId    fernaodias        ├── trechoId      "TR-12"
+├── kmInicial    73.7              ├── data          "2026-05-18"
+├── kmFinal      80.3              ├── tipo          rocada_mecanica
+├── tipoArea     acostamento       ├── motivo        "Vegetação obstruindo sinalização"
+├── medicao      62                └── resultado     "62 cm → 9 cm"
+├── dataMedicao  "2026-09-22"
+├── causa        visibilidade
+├── latitude     -22.87186
+└── longitude    -46.37257
+```
+
+A **prioridade não é um campo** — é calculada a partir da medição e do alvo do trecho,
+para que não exista registro com prioridade desatualizada em relação à leitura.
+
+A base cobre **36 trechos** nas três rodovias do piloto:
+
+| Rodovia | Trechos | Extensão real |
+|---|---:|---:|
+| Fernão Dias (BR-381) | 13 | 569 km |
+| Autoban (SP-330/SP-348) | 11 | 316,8 km |
+| Motiva Paraná (BR-369/373/376) | 12 | 569 km |
+
+A quilometragem e as coordenadas de cada trecho são **reais**, levantadas do
+OpenStreetMap durante o trabalho do grupo para o Desafio de Inovação Motiva. As
+medições de vegetação e as causas de alerta são simuladas.
 
 ---
 
 ## Como os dados estão mockados
 
 A aplicação **não acessa `src/data/` diretamente**. Toda leitura e escrita passa por
-`src/services/ocorrenciasApi.ts`, que se comporta como um backend: funções assíncronas,
-com latência e possibilidade de falha. Quando a API real existir, basta trocar o corpo
+`src/services/trechosApi.ts`, que se comporta como um backend: funções assíncronas, com
+latência e possibilidade de falha. Quando a API real existir, basta trocar o corpo
 dessas funções por chamadas HTTP — nenhuma tela precisa ser alterada.
 
 ```
-src/data/mockOcorrencias.ts     base inicial (8 registros)
+src/data/mockTrechos.ts        base inicial (36 trechos, 15 intervenções)
         ↓
-src/services/ocorrenciasApi.ts  API simulada: latência, erros e cenários
+src/services/trechosApi.ts     API simulada + persistência em AsyncStorage
         ↓
-src/context/AppContext.tsx      estado global, carregamento e erro
+src/context/AppContext.tsx     estado global, carregamento e erro
         ↓
-src/screens/*                   telas (não conhecem o serviço)
+src/screens/*                  telas (não conhecem o serviço)
 ```
 
 ### Operações disponíveis
 
 | Função | Equivale a | Comportamento |
 |---|---|---|
-| `listarOcorrencias()` | `GET /ocorrencias` | Devolve a lista ordenada por data decrescente |
-| `criarOcorrencia(dados)` | `POST /ocorrencias` | Gera o id e grava com situação "aberta" |
-| `atualizarOcorrencia(id, dados)` | `PUT /ocorrencias/:id` | Atualiza os campos editáveis |
-| `removerOcorrencia(id)` | `DELETE /ocorrencias/:id` | Remove o registro |
-| `alternarStatusOcorrencia(id)` | `PATCH /ocorrencias/:id/status` | Alterna entre aberta e resolvida |
+| `listarTrechos()` | `GET /trechos` | Devolve a malha monitorada |
+| `listarIntervencoes()` | `GET /intervencoes` | Devolve o histórico completo |
+| `registrarLeitura(id, dados)` | `PATCH /trechos/:id/leitura` | Grava a nova medição e recalcula a prioridade |
+| `criarIntervencao(dados)` | `POST /intervencoes` | Gera o id e grava no histórico |
+| `atualizarIntervencao(id, dados)` | `PUT /intervencoes/:id` | Atualiza os campos editáveis |
+| `removerIntervencao(id)` | `DELETE /intervencoes/:id` | Remove o registro |
 
 ### Cenários simulados
-
-O painel **"Simulação de cenários"**, na Home, troca o comportamento da API em tempo de
-execução. É o que torna demonstráveis os estados que uma base estática nunca produziria:
 
 | Cenário | O que simula | Estado exercitado |
 |---|---|---|
@@ -139,119 +227,161 @@ execução. É o que torna demonstráveis os estados que uma base estática nunc
 | **Erro** | Falha de conexão em **todas** as operações | Erro de carga, erro ao salvar e erro ao excluir |
 | **Lento** | Resposta em ~2,5 s | Indicador de carregamento |
 
-Trocar de cenário reinicia a base simulada, o que também serve para voltar ao estado
-inicial durante uma demonstração.
+O cenário *lista vazia* esvazia a base **apenas em memória** — o que está gravado no
+dispositivo não é apagado, e volta ao trocar de cenário.
 
 ---
 
 ## Estrutura do projeto
 
 ```
-motiva-app/
 ├── src/
 │   ├── screens/
-│   │   ├── AppNavigator.tsx       navegação condicional entre as telas
-│   │   ├── HomeScreen.tsx         listagem, busca, filtro e estados
-│   │   ├── FormularioScreen.tsx   cadastro e edição (mesma tela)
-│   │   └── DetalheScreen.tsx      detalhe e ações sobre o registro
+│   │   ├── AppNavigator.tsx       navegação e botão voltar do Android
+│   │   ├── HomeScreen.tsx         listagem, busca, filtros e estados
+│   │   ├── DetalheScreen.tsx      trecho + histórico de intervenções
+│   │   ├── LeituraScreen.tsx      registro de medição de vegetação
+│   │   └── FormularioScreen.tsx   cadastro e edição de intervenção
 │   ├── components/
-│   │   ├── Button.tsx             botão com variantes e estado de carregamento
-│   │   ├── FormField.tsx          campo de formulário com rótulo, apoio e erro
-│   │   ├── OcorrenciaCard.tsx     card da listagem
-│   │   ├── RiscoBadge.tsx         selo de nível de risco
-│   │   ├── StatusBadge.tsx        selo de situação
+│   │   ├── TrechoCard.tsx         card da listagem
+│   │   ├── PrioridadeBadge.tsx    selo de prioridade
+│   │   ├── TipoAreaBadge.tsx      selo de acostamento/talude
+│   │   ├── FiltroPrioridadeBar.tsx chips de filtro com contagem
+│   │   ├── SeletorRodovia.tsx     alternância entre as três malhas
+│   │   ├── SeletorCenario.tsx     painel de simulação de cenários
+│   │   ├── Button.tsx             botão com variantes e carregamento
+│   │   ├── FormField.tsx          campo com rótulo, apoio e erro
 │   │   ├── ConfirmDialog.tsx      diálogo de confirmação em Modal
 │   │   ├── EstadoMensagem.tsx     bloco de estado (carregando, erro, vazio)
 │   │   ├── AvisoErro.tsx          faixa de erro em formulários
-│   │   ├── CampoBusca.tsx         campo de busca
-│   │   ├── FiltroRiscoBar.tsx     chips de filtro por risco
-│   │   └── SeletorCenario.tsx     painel de simulação de cenários
-│   ├── services/
-│   │   └── ocorrenciasApi.ts      camada de mock (API simulada)
-│   ├── context/
-│   │   └── AppContext.tsx         estado global e orquestração das chamadas
-│   ├── data/
-│   │   └── mockOcorrencias.ts     base inicial
+│   │   └── CampoBusca.tsx         campo de busca
+│   ├── services/trechosApi.ts     camada de mock + persistência
+│   ├── context/AppContext.tsx     estado global
+│   ├── data/mockTrechos.ts        base inicial
 │   ├── utils/
+│   │   ├── vegetacao.ts           regras de domínio (alvo e prioridade)
 │   │   ├── data.ts                formatação, validação e máscara de data
 │   │   └── texto.ts               normalização para busca
-│   └── types/
-│       └── index.ts               modelagem TypeScript
+│   └── types/index.ts             modelagem TypeScript
 ├── app/                           rotas do expo-router (ponto de entrada)
-├── components/                    componentes base do template
+├── components/, hooks/, lib/      base de tema e área segura
+├── tests/                         testes automatizados (Vitest)
 ├── docs/
-│   ├── TESTES-MANUAIS.md          documento de testes da Sprint 3
+│   ├── PLANO-DE-NEGOCIO.md        plano de negócio da Sprint 4
+│   ├── TESTES-MANUAIS.md          documento de testes
 │   └── ROTEIRO-VIDEO.md           roteiro da demonstração
+├── eas.json                       configuração do EAS Build
 └── README.md
 ```
 
 ---
 
-## Decisões técnicas da Sprint 3
+## Decisões técnicas
 
 **Continuamos em React Native.** Não houve migração para Flutter: a base da Sprint 2 já
-estava em React Native com Expo e o esforço de reescrita não traria ganho dentro do escopo,
-que é justamente consolidar o que já existia.
+estava em React Native com Expo, e o esforço de reescrita não traria ganho dentro do
+escopo. A Sprint 4 reaproveita integralmente o código das Sprints anteriores.
 
-**A camada de dados virou assíncrona.** Sair de um array síncrono para um serviço com
-`Promise`, latência e falhas obrigou as telas a tratarem carregamento e erro — que é o
-comportamento real de um app conectado. A troca pela API verdadeira fica restrita a um
-único arquivo.
+**O repositório foi limpo do código de template.** As Sprints anteriores carregavam um
+servidor com LLM, geração de imagem, transcrição de voz, autenticação OAuth, ORM
+(Drizzle) e uma tela de laboratório de tema — nada disso é usado pela solução. Foram
+removidos 61 arquivos, e as dependências caíram de 71 para 36 pacotes. O que sobrou é o
+que o aplicativo de fato executa.
 
-**A mesma tela atende cadastro e edição.** Evita duplicar formulário, validação e
-tratamento de erro; o modo é definido pela presença ou não de uma ocorrência recebida.
+**A prioridade é calculada, não armazenada.** Guardar a prioridade como campo abriria
+espaço para ela divergir da medição depois de uma edição. `avaliarTrecho()` deriva a
+prioridade toda vez, a partir da leitura e do alvo.
+
+**O alvo de corte é contextual.** Trechos de acostamento cuja causa é visibilidade usam
+25 cm em vez de 40 cm. Sem isso, um trecho com 30 cm em curva fechada apareceria como
+"atenção" quando na prática já é crítico.
+
+**A camada de dados é assíncrona e persistente.** O serviço simula latência e falhas, o
+que obriga as telas a tratarem carregamento e erro. A partir da Sprint 4, o que é gravado
+é espelhado no AsyncStorage e sobrevive ao fechamento do app.
+
+**A mesma tela atende cadastro e edição de intervenção.** Evita duplicar formulário,
+validação e tratamento de erro; o modo é definido pela presença ou não de uma
+intervenção recebida.
+
+**O botão voltar do Android é tratado explicitamente.** A navegação é condicional por
+estado, então o gesto de voltar do sistema fecharia o aplicativo em vez de retornar à
+tela anterior. `AppNavigator` registra um `BackHandler` que desce um nível na hierarquia
+e só devolve o controle ao sistema na tela inicial. **Este defeito não aparece na build
+web** — apareceu apenas no APK instalado.
 
 **A confirmação de exclusão não usa `Alert.alert`.** O `Alert` do React Native não
 renderiza botões na web, o que deixava o fluxo de exclusão sem efeito no navegador. O
 `ConfirmDialog` baseado em `Modal` se comporta igual nas três plataformas.
 
-**Aparência fica em `View`, não em `Pressable`.** O template desativa o mapeamento de
-`className` em `Pressable` (`lib/_core/nativewind-pressable.ts`) para impedir que a
-className engula o `onPress`. Por isso os componentes interativos usam `Pressable` apenas
-para o toque, com a aparência em uma `View` interna.
+**Aparência fica em `View`, não em `Pressable`.** O mapeamento de `className` em
+`Pressable` está desativado (`lib/_core/nativewind-pressable.ts`) para impedir que a
+className engula o `onPress`. Por isso os componentes interativos usam `Pressable`
+apenas para o toque, com a aparência em uma `View` interna.
 
-**Datas são tratadas como string.** `new Date("AAAA-MM-DD")` interpreta a data como UTC e,
-em fuso negativo, exibe o dia anterior. A conversão para pt-BR é feita por manipulação de
-string em `src/utils/data.ts`.
+**Datas são tratadas como string.** `new Date("AAAA-MM-DD")` interpreta a data como UTC
+e, em fuso negativo, exibe o dia anterior. A conversão para pt-BR é feita por
+manipulação de string em `src/utils/data.ts`.
 
 ---
 
 ## Testes
 
-O documento completo está em **[`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md)**: 8
-casos de teste cobrindo os 5 fluxos principais e 3 complementares, com cenário testado,
-resultado esperado, resultado obtido e status. Inclui também os 7 defeitos encontrados
-durante a execução e corrigidos nesta Sprint.
+**Testes automatizados** — 27 casos em [`tests/`](tests/), executados com `pnpm test`:
 
-Resultado da última execução: **8 casos, 8 aprovados, nenhum erro de console**.
+| Arquivo | Cobre |
+|---|---|
+| `tests/vegetacao.test.ts` | Alvo contextual (40/25/50), inversão do critério entre acostamento e talude, formatação de km e extensão |
+| `tests/utils.test.ts` | Validação de data (mês inválido, dia inexistente, ano bissexto), máscara progressiva, formatação pt-BR sem deslocamento de fuso, normalização de acentos na busca |
 
----
-
-## Pendências identificadas
-
-1. **Sem persistência** — os dados vivem em memória e se perdem ao fechar o app.
-2. **Sem API real** — a camada de serviço continua simulada.
-3. **Sem autenticação** — não há login nem controle de acesso.
-4. **Sem seletor de data nativo** — a data é digitada com máscara.
-5. **Navegação por estado local** — sem *deep link* e sem integração com o botão voltar do Android.
-6. **Barra de abas com uma única aba**.
-7. **Sem anexo de foto** na ocorrência.
-8. **Testes executados na build web** — falta a reexecução completa em emulador e dispositivo físico.
-9. **Sem testes automatizados** no projeto.
+**Testes manuais** — o documento completo está em
+[`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md), com cenário testado, resultado
+esperado, resultado obtido e status, mais os defeitos encontrados e corrigidos.
 
 ---
 
-## Plano de ajustes para a Sprint 4
+## Evolução por Sprint
 
-| Prioridade | Ajuste | Por quê |
+| Sprint | Entrega | Resultado |
 |---|---|---|
-| 1 | Persistir as ocorrências com AsyncStorage | É a lacuna mais visível: hoje nada sobrevive ao fechamento do app. A dependência já está instalada. |
-| 2 | Substituir a camada de mock por API real | O serviço já isola as chamadas; a troca fica contida em `ocorrenciasApi.ts`, mantendo os cenários para desenvolvimento. |
-| 3 | Migrar a navegação para o expo-router | Habilita o botão voltar do Android, *deep links* e telas com URL própria. |
-| 4 | Adicionar seletor de data nativo | Remove a fonte mais provável de erro de digitação no formulário. |
-| 5 | Anexar foto à ocorrência | Evidência visual é o que mais falta ao registro em campo. |
-| 6 | Criar a segunda aba (indicadores) | Dá sentido à barra de navegação e aproveita as contagens já calculadas. |
-| 7 | Introduzir testes automatizados | O projeto já tem Vitest configurado; começar pelas regras de validação e pelo serviço. |
+| **1** | Definição do problema e proposta de solução para o desafio da Motiva | Escopo do produto e levantamento do contexto das rodovias concessionadas |
+| **2** | Design da aplicação e base técnica | Telas desenhadas segundo o HIG da Apple e projeto React Native + Expo em pé |
+| **3** | Protótipo funcional completo | CRUD completo sobre camada de mock assíncrona, com painel de cenários, cinco estados de tela e documento de testes com 8 casos |
+| **4** | Versão final, APK e plano de negócio | Foco redirecionado para a gestão de vegetação, remoção do código de template, persistência local, correção do botão voltar do Android, testes automatizados, APK e plano de negócio |
+
+### O que mudou da Sprint 3 para a Sprint 4
+
+A avaliação da Sprint 3 apontou que o aplicativo havia se tornado um registro genérico
+de segurança do trabalho, sem aderência ao desafio da Motiva — que é a gestão e o
+monitoramento da vegetação nas rodovias. A Sprint 4 corrigiu isso:
+
+- **O domínio foi refeito.** As oito ocorrências genéricas (queda de altura, fio
+  exposto, extintor vencido) deram lugar a 36 trechos de faixa de domínio com rodovia,
+  km inicial e final, tipo de área, altura de vegetação e histórico de intervenções.
+- **O código de template foi removido** — servidor com LLM, geração de imagem, OAuth,
+  Drizzle e theme-lab, conforme apontado na avaliação.
+- **Os testes saíram da web.** A bateria foi reexecutada em emulador Android e em
+  dispositivo físico, com o APK instalado.
+- **As pendências da Sprint 3 foram fechadas:** persistência local, botão voltar do
+  Android e testes automatizados.
+
+---
+
+## Plano de negócio
+
+O documento completo está em [`docs/PLANO-DE-NEGOCIO.md`](docs/PLANO-DE-NEGOCIO.md).
+Em resumo:
+
+- **Proposta de valor** — substituir o cronograma fixo de roçada por uma fila de
+  prioridade baseada em medição.
+- **Modelo de receita** — SaaS B2B a **R$ 60 por km monitorado/mês**, mais implantação
+  e calibração cobradas uma vez por rodovia.
+- **Economia estimada** — R$ 6.300/km/ano, contra R$ 720/km/ano de assinatura: o
+  cliente paga cerca de 11% do que economiza.
+- **Custo operacional** — R$ 960 mil/ano, com ponto de equilíbrio em ~1.333 km
+  monitorados; as três rodovias do piloto somam 1.454,8 km.
+- **Diferencial principal** — não exige hardware novo: usa satélite público (Copernicus,
+  gratuito) e as câmeras já previstas no pacote de investimento da concessionária.
 
 ---
 
@@ -266,10 +396,6 @@ Resultado da última execução: **8 casos, 8 aprovados, nenhum erro de console*
 | Lucca Rosseto Rezende | 564180 |
 | Guilherme Verrillo Peres | 563981 |
 
-## Vídeo de demonstração
-
-Sprint 3: _(inserir o link do YouTube não listado antes da entrega)_
-
 ---
 
-Desenvolvido para a disciplina de Desenvolvimento Mobile — Sprint 3.
+Desenvolvido para a disciplina de Desenvolvimento Mobile — Sprint 4.

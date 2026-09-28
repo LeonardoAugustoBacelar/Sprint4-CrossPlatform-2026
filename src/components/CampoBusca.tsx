@@ -1,6 +1,6 @@
 /**
  * Componente CampoBusca
- * Busca textual por descrição ou local, com botão de limpar.
+ * Busca textual por trecho, rodovia, quilometragem ou causa do alerta.
  */
 
 import { Pressable, Text, TextInput, View } from "react-native";
@@ -16,7 +16,7 @@ interface CampoBuscaProps {
 export function CampoBusca({
   valor,
   onChange,
-  placeholder = "Buscar por descrição ou local",
+  placeholder = "Buscar por trecho, rodovia ou km",
 }: CampoBuscaProps) {
   const cores = useColors();
 

@@ -1,84 +1,94 @@
 /**
- * Tela Home — Lista de Ocorrências
+ * Tela Home — Trechos monitorados
  *
  * Concentra os estados da listagem: carregando, erro, base vazia,
- * busca sem resultado e lista preenchida.
+ * busca sem resultado e lista preenchida. Os trechos chegam ordenados
+ * por prioridade, para que a fila de roçada apareça de cima para baixo.
  */
 
 import { useMemo, useState } from "react";
-import { FlatList, Platform, Pressable, RefreshControl, Text, View } from "react-native";
+import { FlatList, RefreshControl, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { CampoBusca } from "@/src/components/CampoBusca";
 import { EstadoMensagem } from "@/src/components/EstadoMensagem";
-import { FiltroRiscoBar } from "@/src/components/FiltroRiscoBar";
-import { OcorrenciaCard } from "@/src/components/OcorrenciaCard";
+import { FiltroPrioridadeBar } from "@/src/components/FiltroPrioridadeBar";
 import { SeletorCenario } from "@/src/components/SeletorCenario";
+import { SeletorRodovia } from "@/src/components/SeletorRodovia";
+import { TrechoCard } from "@/src/components/TrechoCard";
 import { useApp } from "@/src/context/AppContext";
-import type { FiltroRisco } from "@/src/types";
+import type { FiltroPrioridade, FiltroRodovia } from "@/src/types";
 import { normalizarTexto } from "@/src/utils/texto";
-
-// Sombra do botao flutuante: boxShadow no navegador, shadow*/elevation no dispositivo
-const SOMBRA_FAB =
-  Platform.OS === "web"
-    ? { boxShadow: "0 4px 10px rgba(0,0,0,0.25)" }
-    : {
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 6,
-      };
+import {
+  avaliarTrecho,
+  CAUSA_LABEL,
+  formatarKm,
+  nomeRodovia,
+  ordenarPorPrioridade,
+} from "@/src/utils/vegetacao";
 
 interface HomeScreenProps {
-  onNovaOcorrencia: () => void;
-  onSelecionarOcorrencia: (id: number) => void;
+  onSelecionarTrecho: (id: string) => void;
 }
 
-export function HomeScreen({ onNovaOcorrencia, onSelecionarOcorrencia }: HomeScreenProps) {
-  const { ocorrencias, estado, erro, cenario, recarregar, trocarCenario } = useApp();
+export function HomeScreen({ onSelecionarTrecho }: HomeScreenProps) {
+  const { trechos, estado, erro, cenario, recarregar, trocarCenario } = useApp();
   const cores = useColors();
 
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState<FiltroRisco>("todos");
+  const [filtro, setFiltro] = useState<FiltroPrioridade>("todas");
+  const [rodovia, setRodovia] = useState<FiltroRodovia>("todas");
 
-  const contagens = useMemo<Record<FiltroRisco, number>>(
-    () => ({
-      todos: ocorrencias.length,
-      alto: ocorrencias.filter((item) => item.risco === "alto").length,
-      medio: ocorrencias.filter((item) => item.risco === "medio").length,
-      baixo: ocorrencias.filter((item) => item.risco === "baixo").length,
-    }),
-    [ocorrencias],
+  // A rodovia selecionada é o recorte de base: contagens e filtros de
+  // prioridade se referem sempre à malha que está sendo olhada.
+  const daRodovia = useMemo(
+    () => (rodovia === "todas" ? trechos : trechos.filter((item) => item.rodoviaId === rodovia)),
+    [trechos, rodovia],
   );
 
-  const filtradas = useMemo(() => {
-    const termo = normalizarTexto(busca);
-    return ocorrencias.filter((item) => {
-      const atendeRisco = filtro === "todos" || item.risco === filtro;
-      const atendeBusca =
-        termo.length === 0 ||
-        normalizarTexto(item.descricao).includes(termo) ||
-        normalizarTexto(item.local).includes(termo);
-      return atendeRisco && atendeBusca;
-    });
-  }, [ocorrencias, busca, filtro]);
+  const contagens = useMemo<Record<FiltroPrioridade, number>>(() => {
+    const prioridades = daRodovia.map((item) => avaliarTrecho(item).prioridade);
+    return {
+      todas: daRodovia.length,
+      critica: prioridades.filter((p) => p === "critica").length,
+      atencao: prioridades.filter((p) => p === "atencao").length,
+      ok: prioridades.filter((p) => p === "ok").length,
+    };
+  }, [daRodovia]);
 
-  const carregandoInicial = estado === "carregando" && ocorrencias.length === 0;
-  const listaDisponivel = estado === "pronto" && ocorrencias.length > 0;
-  const emAberto = ocorrencias.filter((item) => item.status === "aberta").length;
+  const filtrados = useMemo(() => {
+    const termo = normalizarTexto(busca);
+    const lista = daRodovia.filter((item) => {
+      const atendePrioridade = filtro === "todas" || avaliarTrecho(item).prioridade === filtro;
+      const alvoDeBusca = [
+        item.id,
+        nomeRodovia(item.rodoviaId),
+        formatarKm(item),
+        item.causa ? CAUSA_LABEL[item.causa] : "",
+      ].join(" ");
+      const atendeBusca = termo.length === 0 || normalizarTexto(alvoDeBusca).includes(termo);
+      return atendePrioridade && atendeBusca;
+    });
+    return ordenarPorPrioridade(lista);
+  }, [daRodovia, busca, filtro]);
+
+  const carregandoInicial = estado === "carregando" && trechos.length === 0;
+  const listaDisponivel = estado === "pronto" && trechos.length > 0;
 
   const limparFiltros = () => {
     setBusca("");
-    setFiltro("todos");
+    setFiltro("todas");
+    setRodovia("todas");
   };
 
   const subtitulo = () => {
-    if (carregandoInicial) return "Carregando registros...";
+    if (carregandoInicial) return "Carregando trechos...";
     if (estado === "erro") return "Não foi possível carregar os dados";
-    if (ocorrencias.length === 0) return "Nenhum registro";
-    return `${ocorrencias.length} ${ocorrencias.length === 1 ? "registro" : "registros"} · ${emAberto} em aberto`;
+    if (trechos.length === 0) return "Nenhum trecho monitorado";
+    const criticos = contagens.critica;
+    const total = daRodovia.length;
+    return `${total} ${total === 1 ? "trecho" : "trechos"} · ${criticos} em prioridade crítica`;
   };
 
   const conteudo = () => {
@@ -86,8 +96,8 @@ export function HomeScreen({ onNovaOcorrencia, onSelecionarOcorrencia }: HomeScr
       return (
         <EstadoMensagem
           carregando
-          titulo="Carregando ocorrências"
-          descricao="Consultando a base de dados simulada."
+          titulo="Carregando trechos"
+          descricao="Consultando a base de monitoramento."
         />
       );
     }
@@ -96,7 +106,7 @@ export function HomeScreen({ onNovaOcorrencia, onSelecionarOcorrencia }: HomeScr
       return (
         <EstadoMensagem
           icone="⚠️"
-          titulo="Falha ao carregar as ocorrências"
+          titulo="Falha ao carregar os trechos"
           descricao={erro ?? undefined}
           acaoTitulo="Tentar novamente"
           onAcao={recarregar}
@@ -104,24 +114,24 @@ export function HomeScreen({ onNovaOcorrencia, onSelecionarOcorrencia }: HomeScr
       );
     }
 
-    if (ocorrencias.length === 0) {
+    if (trechos.length === 0) {
       return (
         <EstadoMensagem
-          icone="📋"
-          titulo="Nenhuma ocorrência registrada"
-          descricao="Assim que uma ocorrência for registrada, ela aparece aqui."
-          acaoTitulo="Registrar ocorrência"
-          onAcao={onNovaOcorrencia}
+          icone="🌱"
+          titulo="Nenhum trecho monitorado"
+          descricao="Assim que a malha for cadastrada, os trechos aparecem aqui ordenados por prioridade."
+          acaoTitulo="Recarregar"
+          onAcao={recarregar}
         />
       );
     }
 
-    if (filtradas.length === 0) {
+    if (filtrados.length === 0) {
       return (
         <EstadoMensagem
           icone="🔍"
           titulo="Nenhum resultado encontrado"
-          descricao="Nenhuma ocorrência corresponde à busca ou ao filtro selecionado."
+          descricao="Nenhum trecho corresponde à busca ou aos filtros selecionados."
           acaoTitulo="Limpar filtros"
           onAcao={limparFiltros}
         />
@@ -130,13 +140,13 @@ export function HomeScreen({ onNovaOcorrencia, onSelecionarOcorrencia }: HomeScr
 
     return (
       <FlatList
-        data={filtradas}
-        keyExtractor={(item) => item.id.toString()}
+        data={filtrados}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <OcorrenciaCard ocorrencia={item} onPress={() => onSelecionarOcorrencia(item.id)} />
+          <TrechoCard trecho={item} onPress={() => onSelecionarTrecho(item.id)} />
         )}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 96 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
         refreshControl={
           <RefreshControl
             refreshing={estado === "carregando"}
@@ -152,7 +162,7 @@ export function HomeScreen({ onNovaOcorrencia, onSelecionarOcorrencia }: HomeScr
   return (
     <ScreenContainer className="p-4">
       <View className="mb-4">
-        <Text className="text-3xl font-bold text-foreground">Ocorrências</Text>
+        <Text className="text-3xl font-bold text-foreground">Faixa de domínio</Text>
         <Text className="text-muted text-sm mt-1">{subtitulo()}</Text>
       </View>
 
@@ -164,38 +174,17 @@ export function HomeScreen({ onNovaOcorrencia, onSelecionarOcorrencia }: HomeScr
 
       {listaDisponivel ? (
         <View className="mb-3">
-          <CampoBusca valor={busca} onChange={setBusca} />
+          <SeletorRodovia valor={rodovia} onChange={setRodovia} />
           <View className="mt-3">
-            <FiltroRiscoBar valor={filtro} contagens={contagens} onChange={setFiltro} />
+            <CampoBusca valor={busca} onChange={setBusca} />
+          </View>
+          <View className="mt-3">
+            <FiltroPrioridadeBar valor={filtro} contagens={contagens} onChange={setFiltro} />
           </View>
         </View>
       ) : null}
 
       <View className="flex-1">{conteudo()}</View>
-
-      <Pressable
-        onPress={onNovaOcorrencia}
-        accessibilityRole="button"
-        accessibilityLabel="Registrar nova ocorrência"
-        style={({ pressed }) => ({
-          position: "absolute",
-          bottom: 24,
-          right: 24,
-          opacity: pressed ? 0.85 : 1,
-          // O transform so e aplicado no toque: mante-lo fixo promove uma
-          // camada de composicao que aparece como um quadrado branco atras do botao.
-          ...(pressed ? { transform: [{ scale: 0.95 }] } : null),
-        })}
-      >
-        <View
-          className="w-14 h-14 bg-primary rounded-full items-center justify-center"
-          style={SOMBRA_FAB}
-        >
-          <Text className="text-white text-3xl font-bold" style={{ lineHeight: 34 }}>
-            +
-          </Text>
-        </View>
-      </Pressable>
     </ScreenContainer>
   );
 }

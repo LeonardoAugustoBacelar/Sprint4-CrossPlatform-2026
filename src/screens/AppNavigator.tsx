@@ -2,87 +2,111 @@
  * AppNavigator
  * Navegação entre as telas da aplicação (navegação condicional com useState).
  *
- * Rotas: home → formulário (novo ou edição) → detalhe.
+ * Rotas: home → detalhe do trecho → leitura ou formulário de intervenção.
+ *
+ * O botão voltar do Android é tratado aqui: sem isso, o gesto de voltar
+ * fecharia o aplicativo em vez de retornar à tela anterior — defeito que
+ * só aparece no APK instalado, não na build web usada na Sprint 3.
  */
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { BackHandler, Platform } from "react-native";
 
 import { useApp } from "@/src/context/AppContext";
 
 import { DetalheScreen } from "./DetalheScreen";
 import { FormularioScreen } from "./FormularioScreen";
 import { HomeScreen } from "./HomeScreen";
+import { LeituraScreen } from "./LeituraScreen";
 
-type Tela = "home" | "formulario" | "detalhe";
+type Tela = "home" | "detalhe" | "leitura" | "formulario";
 
 export function AppNavigator() {
   const [tela, setTela] = useState<Tela>("home");
-  const [idSelecionado, setIdSelecionado] = useState<number | null>(null);
-  const [idEmEdicao, setIdEmEdicao] = useState<number | null>(null);
+  const [trechoSelecionado, setTrechoSelecionado] = useState<string | null>(null);
+  const [intervencaoEmEdicao, setIntervencaoEmEdicao] = useState<number | null>(null);
 
-  const { getOcorrenciaById } = useApp();
+  const { getTrechoById, intervencoes } = useApp();
 
-  const irParaNovo = () => {
-    setIdEmEdicao(null);
-    setTela("formulario");
-  };
-
-  const irParaEdicao = (id: number) => {
-    setIdEmEdicao(id);
-    setTela("formulario");
-  };
-
-  const irParaDetalhe = (id: number) => {
-    setIdSelecionado(id);
+  const irParaDetalhe = (id: string) => {
+    setTrechoSelecionado(id);
+    setIntervencaoEmEdicao(null);
     setTela("detalhe");
   };
 
   const voltarParaHome = () => {
-    setIdSelecionado(null);
-    setIdEmEdicao(null);
+    setTrechoSelecionado(null);
+    setIntervencaoEmEdicao(null);
     setTela("home");
   };
 
-  // Ao salvar, volta para o detalhe quando era edição e para a home quando era cadastro
-  const aoSalvar = () => {
-    if (idEmEdicao !== null) {
-      setIdSelecionado(idEmEdicao);
-      setIdEmEdicao(null);
-      setTela("detalhe");
-      return;
-    }
-    voltarParaHome();
-  };
+  const voltarParaDetalhe = useCallback(() => {
+    setIntervencaoEmEdicao(null);
+    setTela("detalhe");
+  }, []);
 
-  const aoCancelarFormulario = () => {
-    if (idEmEdicao !== null) {
-      setIdSelecionado(idEmEdicao);
-      setIdEmEdicao(null);
-      setTela("detalhe");
-      return;
+  /** Um passo para trás na hierarquia. Devolve false quando já está na raiz. */
+  const voltar = useCallback((): boolean => {
+    if (tela === "leitura" || tela === "formulario") {
+      voltarParaDetalhe();
+      return true;
     }
-    voltarParaHome();
-  };
+    if (tela === "detalhe") {
+      setTrechoSelecionado(null);
+      setTela("home");
+      return true;
+    }
+    return false;
+  }, [tela, voltarParaDetalhe]);
 
-  if (tela === "formulario") {
+  // Botão/gesto voltar do Android. Na home devolvemos false para que o
+  // sistema faça o comportamento padrão (sair do app).
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const inscricao = BackHandler.addEventListener("hardwareBackPress", voltar);
+    return () => inscricao.remove();
+  }, [voltar]);
+
+  const trecho = trechoSelecionado ? getTrechoById(trechoSelecionado) : undefined;
+
+  if (tela === "leitura" && trecho) {
+    return (
+      <LeituraScreen trecho={trecho} onSalvar={voltarParaDetalhe} onCancelar={voltarParaDetalhe} />
+    );
+  }
+
+  if (tela === "formulario" && trecho) {
     return (
       <FormularioScreen
-        ocorrencia={idEmEdicao !== null ? getOcorrenciaById(idEmEdicao) : undefined}
-        onSalvar={aoSalvar}
-        onCancelar={aoCancelarFormulario}
+        trecho={trecho}
+        intervencao={
+          intervencaoEmEdicao !== null
+            ? intervencoes.find((item) => item.id === intervencaoEmEdicao)
+            : undefined
+        }
+        onSalvar={voltarParaDetalhe}
+        onCancelar={voltarParaDetalhe}
       />
     );
   }
 
-  if (tela === "detalhe" && idSelecionado !== null) {
+  if (tela === "detalhe" && trechoSelecionado !== null) {
     return (
       <DetalheScreen
-        id={idSelecionado}
+        id={trechoSelecionado}
         onVoltar={voltarParaHome}
-        onEditar={() => irParaEdicao(idSelecionado)}
+        onAtualizarLeitura={() => setTela("leitura")}
+        onNovaIntervencao={() => {
+          setIntervencaoEmEdicao(null);
+          setTela("formulario");
+        }}
+        onEditarIntervencao={(intervencaoId) => {
+          setIntervencaoEmEdicao(intervencaoId);
+          setTela("formulario");
+        }}
       />
     );
   }
 
-  return <HomeScreen onNovaOcorrencia={irParaNovo} onSelecionarOcorrencia={irParaDetalhe} />;
+  return <HomeScreen onSelecionarTrecho={irParaDetalhe} />;
 }

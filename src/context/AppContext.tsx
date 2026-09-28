@@ -9,13 +9,15 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-import * as api from "@/src/services/ocorrenciasApi";
+import * as api from "@/src/services/trechosApi";
 import type {
   AppContextType,
   CenarioMock,
   EstadoCarregamento,
-  FormOcorrencia,
-  Ocorrencia,
+  FormIntervencao,
+  FormLeitura,
+  Intervencao,
+  Trecho,
 } from "@/src/types";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -25,12 +27,14 @@ function mensagemDeErro(erro: unknown): string {
   return "Ocorreu um erro inesperado. Tente novamente.";
 }
 
-function ordenar(lista: Ocorrencia[]): Ocorrencia[] {
+/** Intervenções sempre da mais recente para a mais antiga. */
+function ordenarPorData(lista: Intervencao[]): Intervencao[] {
   return [...lista].sort((a, b) => b.data.localeCompare(a.data));
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
+  const [trechos, setTrechos] = useState<Trecho[]>([]);
+  const [intervencoes, setIntervencoes] = useState<Intervencao[]>([]);
   const [estado, setEstado] = useState<EstadoCarregamento>("carregando");
   const [erro, setErro] = useState<string | null>(null);
   const [cenario, setCenario] = useState<CenarioMock>(api.getCenario());
@@ -39,74 +43,89 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setEstado("carregando");
     setErro(null);
     try {
-      const lista = await api.listarOcorrencias();
-      setOcorrencias(lista);
+      // As duas listas chegam juntas: a tela de detalhe precisa das duas
+      // para montar o histórico sem uma segunda espera.
+      const [listaTrechos, listaIntervencoes] = await Promise.all([
+        api.listarTrechos(),
+        api.listarIntervencoes(),
+      ]);
+      setTrechos(listaTrechos);
+      setIntervencoes(ordenarPorData(listaIntervencoes));
       setEstado("pronto");
     } catch (falha) {
-      setOcorrencias([]);
+      setTrechos([]);
+      setIntervencoes([]);
       setErro(mensagemDeErro(falha));
       setEstado("erro");
     }
   }, []);
 
-  // Carga inicial da lista
+  // Carga inicial
   useEffect(() => {
     recarregar();
   }, [recarregar]);
 
   const trocarCenario = useCallback(
     async (novoCenario: CenarioMock) => {
-      api.definirCenario(novoCenario);
+      await api.definirCenario(novoCenario);
       setCenario(novoCenario);
-      // Zera a lista para que o estado de carregamento apareca de fato
+      // Zera as listas para que o estado de carregamento apareca de fato
       // ao trocar de cenario (importante no cenario "lento").
-      setOcorrencias([]);
+      setTrechos([]);
+      setIntervencoes([]);
       await recarregar();
     },
     [recarregar],
   );
 
-  const addOcorrencia = useCallback(async (dados: FormOcorrencia) => {
-    const nova = await api.criarOcorrencia(dados);
-    setOcorrencias((anteriores) => ordenar([nova, ...anteriores]));
-  }, []);
-
-  const updateOcorrencia = useCallback(async (id: number, dados: FormOcorrencia) => {
-    const atualizada = await api.atualizarOcorrencia(id, dados);
-    setOcorrencias((anteriores) =>
-      ordenar(anteriores.map((item) => (item.id === id ? atualizada : item))),
-    );
-  }, []);
-
-  const deleteOcorrencia = useCallback(async (id: number) => {
-    await api.removerOcorrencia(id);
-    setOcorrencias((anteriores) => anteriores.filter((item) => item.id !== id));
-  }, []);
-
-  const alternarStatus = useCallback(async (id: number) => {
-    const atualizada = await api.alternarStatusOcorrencia(id);
-    setOcorrencias((anteriores) =>
-      anteriores.map((item) => (item.id === id ? atualizada : item)),
-    );
-  }, []);
-
-  const getOcorrenciaById = useCallback(
-    (id: number) => ocorrencias.find((item) => item.id === id),
-    [ocorrencias],
+  const getTrechoById = useCallback(
+    (id: string) => trechos.find((item) => item.id === id),
+    [trechos],
   );
 
+  const intervencoesDoTrecho = useCallback(
+    (trechoId: string) => intervencoes.filter((item) => item.trechoId === trechoId),
+    [intervencoes],
+  );
+
+  const registrarLeitura = useCallback(async (trechoId: string, dados: FormLeitura) => {
+    const atualizado = await api.registrarLeitura(trechoId, dados);
+    setTrechos((anteriores) =>
+      anteriores.map((item) => (item.id === trechoId ? atualizado : item)),
+    );
+  }, []);
+
+  const addIntervencao = useCallback(async (dados: FormIntervencao) => {
+    const nova = await api.criarIntervencao(dados);
+    setIntervencoes((anteriores) => ordenarPorData([nova, ...anteriores]));
+  }, []);
+
+  const updateIntervencao = useCallback(async (id: number, dados: FormIntervencao) => {
+    const atualizada = await api.atualizarIntervencao(id, dados);
+    setIntervencoes((anteriores) =>
+      ordenarPorData(anteriores.map((item) => (item.id === id ? atualizada : item))),
+    );
+  }, []);
+
+  const deleteIntervencao = useCallback(async (id: number) => {
+    await api.removerIntervencao(id);
+    setIntervencoes((anteriores) => anteriores.filter((item) => item.id !== id));
+  }, []);
+
   const value: AppContextType = {
-    ocorrencias,
+    trechos,
+    intervencoes,
     estado,
     erro,
     cenario,
     recarregar,
     trocarCenario,
-    addOcorrencia,
-    updateOcorrencia,
-    deleteOcorrencia,
-    alternarStatus,
-    getOcorrenciaById,
+    getTrechoById,
+    registrarLeitura,
+    intervencoesDoTrecho,
+    addIntervencao,
+    updateIntervencao,
+    deleteIntervencao,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

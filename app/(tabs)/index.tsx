@@ -1,12 +1,12 @@
 /**
- * Tela Principal - Motiva App
- * Integra AppNavigator com AppProvider
+ * Rota principal — Motiva
+ * Monta o estado global e entrega a navegação entre as telas.
  */
 
-import { AppNavigator } from "@/src/screens/AppNavigator";
 import { AppProvider } from "@/src/context/AppContext";
+import { AppNavigator } from "@/src/screens/AppNavigator";
 
-export default function HomeScreen() {
+export default function Index() {
   return (
     <AppProvider>
       <AppNavigator />

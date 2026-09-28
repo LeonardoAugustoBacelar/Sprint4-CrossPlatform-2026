@@ -1,9 +1,9 @@
 /**
- * Tela Formulário — Cadastro e Edição de Intervenção
+ * Tela Leitura — Atualização da medição do trecho
  *
- * A mesma tela atende aos dois fluxos: quando recebe uma intervenção,
- * entra em modo de edição; sem ela, cadastra um novo registro no
- * histórico do trecho.
+ * Registra o que a equipe (ou o monitoramento remoto) mediu no trecho.
+ * A unidade e os limites de validação mudam conforme o tipo de área:
+ * altura em centímetros no acostamento, cobertura em porcentagem no talude.
  */
 
 import { useState } from "react";
@@ -14,38 +14,35 @@ import { AvisoErro } from "@/src/components/AvisoErro";
 import { Button } from "@/src/components/Button";
 import { FormField } from "@/src/components/FormField";
 import { useApp } from "@/src/context/AppContext";
-import type { Intervencao, TipoIntervencao, Trecho } from "@/src/types";
+import type { CausaAlerta, Trecho } from "@/src/types";
 import { aplicarMascaraData, dataNoFuturo, dataValida, hojeISO } from "@/src/utils/data";
-import { formatarKm, TIPO_INTERVENCAO_LABEL } from "@/src/utils/vegetacao";
+import { avaliarTrecho, CAUSA_LABEL, formatarKm } from "@/src/utils/vegetacao";
 
-interface FormularioScreenProps {
+interface LeituraScreenProps {
   trecho: Trecho;
-  intervencao?: Intervencao;
   onSalvar: () => void;
   onCancelar: () => void;
 }
 
-const TIPOS: TipoIntervencao[] = [
-  "rocada_mecanica",
-  "rocada_preventiva",
-  "hidrossemeadura",
-  "desobstrucao_drenagem",
-  "monitoramento",
+const CAUSAS: (CausaAlerta | "nenhuma")[] = [
+  "nenhuma",
+  "visibilidade",
+  "incendio",
+  "drenagem",
+  "erosao",
 ];
 
-export function FormularioScreen({
-  trecho,
-  intervencao,
-  onSalvar,
-  onCancelar,
-}: FormularioScreenProps) {
-  const { addIntervencao, updateIntervencao } = useApp();
-  const edicao = Boolean(intervencao);
+/** Altura máxima aceita em campo, em cm — acima disso é erro de digitação. */
+const LIMITE_ALTURA_CM = 300;
 
-  const [tipo, setTipo] = useState<TipoIntervencao>(intervencao?.tipo ?? "rocada_mecanica");
-  const [motivo, setMotivo] = useState(intervencao?.motivo ?? "");
-  const [resultado, setResultado] = useState(intervencao?.resultado ?? "");
-  const [data, setData] = useState(intervencao?.data ?? hojeISO());
+export function LeituraScreen({ trecho, onSalvar, onCancelar }: LeituraScreenProps) {
+  const { registrarLeitura } = useApp();
+  const avaliacao = avaliarTrecho(trecho);
+  const ehTalude = trecho.tipoArea === "talude";
+
+  const [medicao, setMedicao] = useState(String(trecho.medicao));
+  const [data, setData] = useState(hojeISO());
+  const [causa, setCausa] = useState<CausaAlerta | "nenhuma">(trecho.causa ?? "nenhuma");
 
   const [erros, setErros] = useState<Record<string, string>>({});
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
@@ -53,17 +50,18 @@ export function FormularioScreen({
 
   const validar = (): boolean => {
     const novosErros: Record<string, string> = {};
+    const valor = Number(medicao);
 
-    if (!motivo.trim()) {
-      novosErros.motivo = "Motivo é obrigatório";
-    } else if (motivo.trim().length < 10) {
-      novosErros.motivo = "Descreva o motivo com pelo menos 10 caracteres";
-    }
-
-    if (!resultado.trim()) {
-      novosErros.resultado = "Resultado é obrigatório";
-    } else if (resultado.trim().length < 3) {
-      novosErros.resultado = "Informe o resultado medido em campo";
+    if (!medicao.trim()) {
+      novosErros.medicao = "Medição é obrigatória";
+    } else if (!Number.isFinite(valor)) {
+      novosErros.medicao = "Informe um número válido";
+    } else if (valor < 0) {
+      novosErros.medicao = "A medição não pode ser negativa";
+    } else if (ehTalude && valor > 100) {
+      novosErros.medicao = "A cobertura vegetal vai de 0% a 100%";
+    } else if (!ehTalude && valor > LIMITE_ALTURA_CM) {
+      novosErros.medicao = `Altura acima de ${LIMITE_ALTURA_CM} cm — confira o valor digitado`;
     }
 
     if (!data.trim()) {
@@ -85,26 +83,18 @@ export function FormularioScreen({
     setSalvando(true);
     setErroEnvio(null);
 
-    const dados = {
-      trechoId: trecho.id,
-      data,
-      tipo,
-      motivo: motivo.trim(),
-      resultado: resultado.trim(),
-    };
-
     try {
-      if (intervencao) {
-        await updateIntervencao(intervencao.id, dados);
-      } else {
-        await addIntervencao(dados);
-      }
+      await registrarLeitura(trecho.id, {
+        medicao: Number(medicao),
+        dataMedicao: data,
+        causa: causa === "nenhuma" ? null : causa,
+      });
       onSalvar();
     } catch (falha) {
       setErroEnvio(
         falha instanceof Error
           ? falha.message
-          : "Não foi possível salvar a intervenção. Tente novamente.",
+          : "Não foi possível salvar a leitura. Tente novamente.",
       );
     } finally {
       setSalvando(false);
@@ -125,9 +115,7 @@ export function FormularioScreen({
           >
             <Text className="text-primary text-2xl font-semibold">←</Text>
           </Pressable>
-          <Text className="text-2xl font-bold text-foreground">
-            {edicao ? "Editar Intervenção" : "Nova Intervenção"}
-          </Text>
+          <Text className="text-2xl font-bold text-foreground">Atualizar leitura</Text>
         </View>
 
         <Text className="text-muted text-sm mb-6">
@@ -136,18 +124,43 @@ export function FormularioScreen({
 
         {erroEnvio ? <AvisoErro mensagem={erroEnvio} /> : null}
 
+        <FormField
+          label={ehTalude ? "Cobertura vegetal (%)" : "Altura da vegetação (cm)"}
+          placeholder={ehTalude ? "0 a 100" : "Ex.: 62"}
+          value={medicao}
+          onChangeText={setMedicao}
+          keyboardType="number-pad"
+          error={erros.medicao}
+          hint={`Alvo do trecho: ${avaliacao.alvo}${avaliacao.unidade}`}
+          editable={!salvando}
+        />
+
+        <FormField
+          label="Data da leitura"
+          placeholder="AAAA-MM-DD"
+          value={data}
+          onChangeText={(texto) => setData(aplicarMascaraData(texto))}
+          keyboardType="number-pad"
+          maxLength={10}
+          error={erros.data}
+          hint="Somente números: a máscara insere os hifens automaticamente"
+          editable={!salvando}
+        />
+
         <View className="mb-4">
-          <Text className="text-foreground font-semibold text-sm mb-2">Tipo de intervenção</Text>
+          <Text className="text-foreground font-semibold text-sm mb-2">Causa do alerta</Text>
           <View className="gap-2">
-            {TIPOS.map((opcao) => {
-              const ativo = tipo === opcao;
+            {CAUSAS.map((opcao) => {
+              const ativo = causa === opcao;
+              const rotulo =
+                opcao === "nenhuma" ? "Sem alerta — acompanhamento de rotina" : CAUSA_LABEL[opcao];
               return (
                 <Pressable
                   key={opcao}
-                  onPress={() => setTipo(opcao)}
+                  onPress={() => setCausa(opcao)}
                   disabled={salvando}
                   accessibilityRole="button"
-                  accessibilityLabel={TIPO_INTERVENCAO_LABEL[opcao]}
+                  accessibilityLabel={rotulo}
                   accessibilityState={{ selected: ativo }}
                   style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
                 >
@@ -165,51 +178,21 @@ export function FormularioScreen({
                           : "font-semibold text-sm text-foreground"
                       }
                     >
-                      {TIPO_INTERVENCAO_LABEL[opcao]}
+                      {rotulo}
                     </Text>
                   </View>
                 </Pressable>
               );
             })}
           </View>
+          <Text className="text-muted text-xs mt-2">
+            A causa &quot;visibilidade&quot; endurece o alvo do acostamento de 40 cm para 25 cm.
+          </Text>
         </View>
 
-        <FormField
-          label="Motivo"
-          placeholder="O que levou a equipe ao trecho?"
-          value={motivo}
-          onChangeText={setMotivo}
-          multiline
-          error={erros.motivo}
-          hint="Mínimo de 10 caracteres"
-          editable={!salvando}
-        />
-
-        <FormField
-          label="Resultado"
-          placeholder="Ex.: 62 cm → 9 cm"
-          value={resultado}
-          onChangeText={setResultado}
-          error={erros.resultado}
-          hint="Efeito medido em campo após o serviço"
-          editable={!salvando}
-        />
-
-        <FormField
-          label="Data da execução"
-          placeholder="AAAA-MM-DD"
-          value={data}
-          onChangeText={(texto) => setData(aplicarMascaraData(texto))}
-          keyboardType="number-pad"
-          maxLength={10}
-          error={erros.data}
-          hint="Somente números: a máscara insere os hifens automaticamente"
-          editable={!salvando}
-        />
-
-        <View className="gap-3 mt-6 mb-8">
+        <View className="gap-3 mt-2 mb-8">
           <Button
-            title={edicao ? "Salvar alterações" : "Salvar"}
+            title="Salvar leitura"
             onPress={handleSalvar}
             loading={salvando}
             variant="primary"

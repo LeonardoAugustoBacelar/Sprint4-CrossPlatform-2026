@@ -1,0 +1,26 @@
+SPRINT 4 - VERSAO FINAL, APK E PLANO DE NEGOCIO
+Disciplina: Desenvolvimento Mobile
+Projeto: Motiva - Gestao de Vegetacao na Faixa de Dominio
+
+INTEGRANTES
+Alexandre Campao Fernandes Schneider Bertini - RM 563346
+Pedro Gabriel Mendes Soares Leite - RM 562242
+Leonardo Augusto Bacelar da Cunha - RM 565564
+Massayoshi Bando Fogaca e Silva - RM 561779
+Lucca Rosseto Rezende - RM 564180
+Guilherme Verrillo Peres - RM 563981
+
+REPOSITORIO GITHUB
+<COLAR AQUI O LINK DO REPOSITORIO SPRINT4>
+
+APK PARA DOWNLOAD (GOOGLE DRIVE / GITHUB RELEASES)
+<COLAR AQUI O LINK DO APK>
+
+VIDEO DE PITCH E DEMONSTRACAO (YOUTUBE, NAO LISTADO - ATE 5 MIN)
+<COLAR AQUI O LINK DO VIDEO>
+
+PLANO DE NEGOCIO
+docs/PLANO-DE-NEGOCIO.md
+
+DOCUMENTO DE TESTES
+docs/TESTES-MANUAIS.md

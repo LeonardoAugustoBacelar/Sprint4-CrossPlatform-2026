@@ -1,62 +1,42 @@
-# Motiva App — Sprint 3 (Protótipo Funcional Completo)
+# Motiva — Sprint 4 (Versão Final, APK e Plano de Negócio)
 
-## Fluxos da aplicação
+## Aderência ao desafio (feedback da Sprint 3)
 
-- [x] Listagem de ocorrências com contagem no cabeçalho
-- [x] Rolagem da lista completa e pull-to-refresh
-- [x] Busca textual por descrição e local (ignorando acentuação)
-- [x] Filtro por nível de risco com contagem por faixa
-- [x] Cadastro de ocorrência com validação por campo
-- [x] Máscara e validação de data (formato, data existente e não futura)
-- [x] Edição de ocorrência reaproveitando o formulário de cadastro
-- [x] Detalhe com todos os campos do registro
-- [x] Alternância de situação (aberta ↔ resolvida)
-- [x] Exclusão com diálogo de confirmação multiplataforma
+- [x] Redirecionar o produto para a gestão de vegetação na faixa de domínio
+- [x] Modelar trecho com rodovia, km inicial/final, tipo de área e altura da vegetação
+- [x] Substituir as 8 ocorrências genéricas por 36 trechos das 3 rodovias da Motiva
+- [x] Implementar prioridade de roçada derivada da medição e do alvo
+- [x] Implementar histórico de intervenções por trecho
+- [x] Diferenciar acostamento (altura em cm) de talude (cobertura em %)
+- [x] Alvo de corte contextual: 25 cm em trechos de visibilidade, 40 cm nos demais
 
-## Camada de mock
+## Limpeza do repositório (feedback da Sprint 3)
 
-- [x] Serviço assíncrono simulando API (latência, erro e ordenação)
-- [x] Cenário de sucesso
-- [x] Cenário de lista vazia
-- [x] Cenário de erro de conexão em todas as operações
-- [x] Cenário de carregamento lento
-- [x] Painel para trocar o cenário em tempo de execução
+- [x] Remover o servidor (LLM, geração de imagem, transcrição, notificações)
+- [x] Remover autenticação OAuth e tRPC
+- [x] Remover Drizzle e as migrações
+- [x] Remover a tela theme-lab e os componentes não usados do template
+- [x] Remover scripts, assets e dependências órfãs (71 → 36 pacotes)
 
-## Estados de tela
+## Funcionalidades pendentes da Sprint 3
 
-- [x] Carregando
-- [x] Erro com ação de tentar novamente
-- [x] Lista vazia
-- [x] Busca sem resultado (distinta da lista vazia)
-- [x] Erro ao salvar e ao excluir, preservando os dados digitados
+- [x] Persistência local com AsyncStorage
+- [x] Corrigir o botão voltar do Android (fechava o app em vez de voltar)
+- [x] Testes automatizados (27 casos)
 
-## Consistência visual
+## Entrega da Sprint 4
 
-- [x] Corrigir o glob do Tailwind para varrer `src/`
-- [x] Corrigir a estilização dos componentes interativos (className em View, não em Pressable)
-- [x] Selos de risco e situação com cores próprias em tema claro e escuro
-- [x] Componentes reutilizáveis para estado, erro, busca, filtro e diálogo
-
-## Documentação
-
-- [x] Documento de testes manuais (docs/TESTES-MANUAIS.md)
-- [x] README com status por funcionalidade, pendências e plano da Sprint 4
-- [x] Roteiro do vídeo de demonstração (docs/ROTEIRO-VIDEO.md)
-
-## Entrega
-
-- [ ] Reexecutar os testes no emulador Android e atualizar o documento
-- [ ] Push do código no repositório do GitHub
-- [ ] Gravar o vídeo de até 3 minutos
-- [ ] Publicar no YouTube como não listado
-- [ ] Preencher os links no arquivo ENTREGA-SPRINT3.txt
-
-## Sprint 4 (planejado)
-
-- [ ] Persistência local com AsyncStorage
-- [ ] Integração com API real
-- [ ] Navegação com expo-router
-- [ ] Seletor de data nativo
-- [ ] Anexo de foto na ocorrência
-- [ ] Segunda aba de indicadores
-- [ ] Testes automatizados
+- [x] Configurar o EAS Build com perfil que gera APK
+- [x] Escrever o plano de negócio (docs/PLANO-DE-NEGOCIO.md)
+- [x] Consolidar o README como documento-âncora das 4 sprints
+- [x] Escrever o roteiro do vídeo de pitch (docs/ROTEIRO-VIDEO.md)
+- [x] Preparar o documento de testes para execução no dispositivo
+- [ ] Rodar `npx eas-cli login` com a conta Expo do grupo
+- [ ] Gerar o APK com `pnpm build:apk`
+- [ ] Executar a bateria de testes com o APK no emulador e no celular
+- [ ] Preencher os resultados em docs/TESTES-MANUAIS.md
+- [ ] Publicar o APK (Google Drive ou GitHub Releases) e colar o link no README
+- [ ] Gravar o vídeo de pitch de até 5 minutos (narração dos integrantes, sem IA)
+- [ ] Publicar o vídeo no YouTube como não listado e colar o link no README
+- [ ] Criar o repositório Sprint4-CrossPlatform-2026 e subir o código
+- [ ] Preencher os links em ENTREGA-SPRINT4.txt
