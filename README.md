@@ -334,9 +334,11 @@ manipulação de string em `src/utils/data.ts`.
 | `tests/vegetacao.test.ts` | Alvo contextual (40/25/50), inversão do critério entre acostamento e talude, formatação de km e extensão |
 | `tests/utils.test.ts` | Validação de data (mês inválido, dia inexistente, ano bissexto), máscara progressiva, formatação pt-BR sem deslocamento de fuso, normalização de acentos na busca |
 
-**Testes manuais** — o documento completo está em
-[`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md), com cenário testado, resultado
-esperado, resultado obtido e status, mais os defeitos encontrados e corrigidos.
+**Testes manuais** — a bateria de 14 casos está em
+[`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md), com cenário testado e resultado
+esperado para cada um, mais os defeitos já corrigidos nesta Sprint.
+⚠️ _A execução deve ser feita com o APK instalado no dispositivo, preenchendo as
+colunas de resultado obtido e status._
 
 ---
 
@@ -360,8 +362,10 @@ monitoramento da vegetação nas rodovias. A Sprint 4 corrigiu isso:
   km inicial e final, tipo de área, altura de vegetação e histórico de intervenções.
 - **O código de template foi removido** — servidor com LLM, geração de imagem, OAuth,
   Drizzle e theme-lab, conforme apontado na avaliação.
-- **Os testes saíram da web.** A bateria foi reexecutada em emulador Android e em
-  dispositivo físico, com o APK instalado.
+- **Os testes saem da web.** O documento de testes foi refeito para execução com o APK
+  instalado no dispositivo, incluindo dois casos que não têm equivalente no navegador:
+  persistência dos dados após encerrar o app e botão voltar do Android.
+  ⚠️ _Preencher o resultado da execução em `docs/TESTES-MANUAIS.md` antes da entrega._
 - **As pendências da Sprint 3 foram fechadas:** persistência local, botão voltar do
   Android e testes automatizados.
 
