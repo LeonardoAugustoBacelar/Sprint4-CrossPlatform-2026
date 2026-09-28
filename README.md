@@ -19,7 +19,6 @@ intervenções de cada ponto da malha.
 | 🎬 **Vídeo de pitch e demonstração** | _(inserir o link do YouTube não listado)_ |
 | 📊 **Plano de negócio** | [`docs/PLANO-DE-NEGOCIO.md`](docs/PLANO-DE-NEGOCIO.md) |
 | 🧪 **Documento de testes** | [`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md) |
-| 🎥 **Roteiro do vídeo** | [`docs/ROTEIRO-VIDEO.md`](docs/ROTEIRO-VIDEO.md) |
 
 ---
 
@@ -269,7 +268,7 @@ dispositivo não é apagado, e volta ao trocar de cenário.
 ├── docs/
 │   ├── PLANO-DE-NEGOCIO.md        plano de negócio da Sprint 4
 │   ├── TESTES-MANUAIS.md          documento de testes
-│   └── ROTEIRO-VIDEO.md           roteiro da demonstração
+│   └── DESIGN-SPRINT2.md          design original (documento histórico)
 ├── eas.json                       configuração do EAS Build
 └── README.md
 ```

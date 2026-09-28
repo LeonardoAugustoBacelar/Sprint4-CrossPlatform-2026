@@ -29,7 +29,6 @@
 - [x] Configurar o EAS Build com perfil que gera APK
 - [x] Escrever o plano de negócio (docs/PLANO-DE-NEGOCIO.md)
 - [x] Consolidar o README como documento-âncora das 4 sprints
-- [x] Escrever o roteiro do vídeo de pitch (docs/ROTEIRO-VIDEO.md)
 - [x] Preparar o documento de testes para execução no dispositivo
 - [ ] Rodar `npx eas-cli login` com a conta Expo do grupo
 - [ ] Gerar o APK com `pnpm build:apk`
