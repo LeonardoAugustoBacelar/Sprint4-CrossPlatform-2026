@@ -19,6 +19,7 @@ intervenções de cada ponto da malha.
 | 🎬 **Vídeo de pitch e demonstração** | _(inserir o link do YouTube não listado)_ |
 | 📊 **Plano de negócio** | [`docs/PLANO-DE-NEGOCIO.md`](docs/PLANO-DE-NEGOCIO.md) |
 | 🧪 **Documento de testes** | [`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md) |
+| 📱 **Capturas de tela** | [`docs/CAPTURAS.md`](docs/CAPTURAS.md) |
 
 ---
 
@@ -62,6 +63,21 @@ O alvo de 25 cm para trechos de visibilidade (curva de raio reduzido ou proximid
 placa) é o ponto central: tratar 40 cm como limiar universal mascara risco real, porque
 nesses trechos a vegetação já obstrui bem antes. A regra está em
 [`src/utils/vegetacao.ts`](src/utils/vegetacao.ts) e é coberta por testes automatizados.
+
+### O app
+
+<p align="center">
+  <img src="docs/images/01-home-fila-prioridade.png" width="240">
+  <img src="docs/images/02-acostamento-alvo-25cm.png" width="240">
+  <img src="docs/images/03-talude-cobertura.png" width="240">
+</p>
+
+<p align="center">
+  <em>Fila de roçada por prioridade · alvo contextual de 25 cm · critério invertido no talude</em>
+</p>
+
+Mais telas, com o comentário do que cada uma demonstra, em
+**[`docs/CAPTURAS.md`](docs/CAPTURAS.md)**.
 
 ---
 
@@ -268,6 +284,8 @@ dispositivo não é apagado, e volta ao trocar de cenário.
 ├── docs/
 │   ├── PLANO-DE-NEGOCIO.md        plano de negócio da Sprint 4
 │   ├── TESTES-MANUAIS.md          documento de testes
+│   ├── CAPTURAS.md                telas comentadas
+│   ├── images/                    capturas de tela
 │   └── DESIGN-SPRINT2.md          design original (documento histórico)
 ├── eas.json                       configuração do EAS Build
 └── README.md
