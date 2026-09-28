@@ -12,7 +12,7 @@
     "lint": "expo lint",
     "format": "prettier --write .",
     "test": "vitest run",
-    "build:apk": "eas build --platform android --profile preview"
+    "build:apk": "npx eas-cli build --platform android --profile preview"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
