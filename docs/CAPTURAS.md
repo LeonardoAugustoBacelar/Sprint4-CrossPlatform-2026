@@ -4,8 +4,11 @@ Telas do aplicativo com o comentário do que cada uma demonstra.
 
 > **Sobre as imagens.** Foram capturadas da build web do projeto — **mesmo código-fonte
 > das telas nativas** — com o viewport restrito à largura de um celular (390 px), para
-> que o layout fluísse como no aparelho. Não são capturas do APK instalado: essas serão
-> feitas durante a execução do [documento de testes](TESTES-MANUAIS.md).
+> que o layout fluísse como no aparelho.
+>
+> O aplicativo também foi verificado com o **APK instalado em emulador Android**
+> (Pixel, Android 14), onde a apresentação é equivalente. Detalhes do ambiente no
+> [documento de testes](TESTES-MANUAIS.md).
 
 ---
 

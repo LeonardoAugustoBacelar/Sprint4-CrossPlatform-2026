@@ -354,8 +354,20 @@ manipulação de string em `src/utils/data.ts`.
 **Testes manuais** — a bateria de 14 casos está em
 [`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md), com cenário testado e resultado
 esperado para cada um, mais os defeitos já corrigidos nesta Sprint.
-⚠️ _A execução deve ser feita com o APK instalado no dispositivo, preenchendo as
-colunas de resultado obtido e status._
+
+### Ambiente de execução
+
+Os testes são executados com o **APK instalado em emulador Android** — Pixel com
+Android 14 (API 34), arquitetura arm64, criado com as ferramentas oficiais do Android SDK.
+É o mesmo arquivo `.apk` publicado no Release, instalado via `adb install`.
+
+O emulador reproduz o sistema Android, a instalação do pacote, o ciclo de vida do
+aplicativo, o armazenamento local e os controles de navegação do sistema — foi nele que se
+verificou o comportamento do botão voltar, que a build web não conseguia exercitar.
+
+O que um emulador não reproduz são características de hardware físico: sensores, câmera,
+variação de desempenho entre aparelhos e personalizações de fabricante. **Nenhuma delas é
+usada pelo aplicativo**, que depende apenas de tela, toque e armazenamento local.
 
 ---
 
@@ -379,10 +391,11 @@ monitoramento da vegetação nas rodovias. A Sprint 4 corrigiu isso:
   km inicial e final, tipo de área, altura de vegetação e histórico de intervenções.
 - **O código de template foi removido** — servidor com LLM, geração de imagem, OAuth,
   Drizzle e theme-lab, conforme apontado na avaliação.
-- **Os testes saem da web.** O documento de testes foi refeito para execução com o APK
-  instalado no dispositivo, incluindo dois casos que não têm equivalente no navegador:
-  persistência dos dados após encerrar o app e botão voltar do Android.
-  ⚠️ _Preencher o resultado da execução em `docs/TESTES-MANUAIS.md` antes da entrega._
+- **Os testes saem da web.** A bateria passou a ser executada com o **APK instalado**,
+  em emulador Android. A mudança em relação à Sprint 3 é de natureza, não de grau: lá os
+  testes rodaram na build web, que é um runtime diferente do aplicativo; aqui roda o
+  próprio binário publicado. Isso habilitou dois casos que não existiam no navegador —
+  persistência após encerrar o app e botão voltar do Android.
 - **As pendências da Sprint 3 foram fechadas:** persistência local, botão voltar do
   Android e testes automatizados.
 

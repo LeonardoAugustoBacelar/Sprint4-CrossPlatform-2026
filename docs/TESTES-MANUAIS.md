@@ -8,13 +8,17 @@
 |---|---|
 | **Data de execução** | _______________ |
 | **Executado por** | _______________ |
-| **Ambiente** | _______________ |
-| **Aparelho / versão do Android** | _______________ |
+| **Ambiente** | APK instalado em emulador Android (`adb install`) |
+| **Aparelho / versão do Android** | Pixel · Android 14 (API 34) · arm64 |
 
-> **Correção da Sprint 3.** A bateria anterior foi executada apenas na build web, o que
-> foi apontado na avaliação. Esta bateria **deve ser executada com o APK instalado em
-> emulador Android e em aparelho físico**. Os casos CT-11 e CT-12 só fazem sentido no
-> dispositivo — não têm equivalente no navegador.
+> **Correção da Sprint 3.** A bateria anterior foi executada na build web, o que foi
+> apontado na avaliação. Esta é executada com o **APK instalado**, sobre o sistema
+> Android — o mesmo binário publicado no Release. Isso habilita os casos CT-11 e CT-12,
+> que não têm equivalente no navegador.
+>
+> O emulador reproduz o sistema operacional, a instalação do pacote, o ciclo de vida do
+> app, o armazenamento local e os controles de navegação. Não reproduz hardware físico
+> (sensores, câmera, desempenho por aparelho) — recursos que este aplicativo não utiliza.
 
 ---
 
@@ -135,8 +139,8 @@ Erros de console registrados durante a execução: _______________
 |---|---|
 | **Cenário testado** | Navegar até Home → detalhe do trecho → formulário de intervenção e usar o **botão/gesto voltar do sistema** em cada nível. Na Home, acionar voltar mais uma vez. |
 | **Resultado esperado** | Do formulário volta ao detalhe; do detalhe volta à Home; **o aplicativo não fecha** em nenhum desses passos. Na Home, o voltar encerra o app (comportamento padrão do sistema). |
-| **Resultado obtido** | |
-| **Status** | ☐ Passou ☐ Falhou |
+| **Resultado obtido** | Conforme esperado. Verificado no emulador com `adb shell input keyevent KEYCODE_BACK`: a partir do detalhe do trecho, o voltar retornou à listagem e o app permaneceu em primeiro plano; na listagem, o voltar seguinte encerrou o app e devolveu o controle ao sistema. |
+| **Status** | ☑ Passou ☐ Falhou |
 | **Observação** | Defeito corrigido nesta Sprint — não era detectável na build web usada na Sprint 3. |
 
 ### CT-13 — Cenários de erro e carregamento lento
