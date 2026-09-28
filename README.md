@@ -15,7 +15,7 @@ intervenções de cada ponto da malha.
 
 | Item | Onde está |
 |---|---|
-| 📦 **APK para Android** | _(inserir o link de download antes da entrega)_ |
+| 📦 **APK para Android** | **[Baixar Motiva v4.0.0](https://github.com/LeonardoAugustoBacelar/Sprint4-CrossPlatform-2026/releases/download/v4.0.0/Motiva-v4.0.0.apk)** |
 | 🎬 **Vídeo de pitch e demonstração** | _(inserir o link do YouTube não listado)_ |
 | 📊 **Plano de negócio** | [`docs/PLANO-DE-NEGOCIO.md`](docs/PLANO-DE-NEGOCIO.md) |
 | 🧪 **Documento de testes** | [`docs/TESTES-MANUAIS.md`](docs/TESTES-MANUAIS.md) |
