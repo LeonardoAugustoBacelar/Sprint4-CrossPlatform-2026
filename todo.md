@@ -30,12 +30,13 @@
 - [x] Escrever o plano de negócio (docs/PLANO-DE-NEGOCIO.md)
 - [x] Consolidar o README como documento-âncora das 4 sprints
 - [x] Preparar o documento de testes para execução no dispositivo
-- [ ] Rodar `npx eas-cli login` com a conta Expo do grupo
-- [ ] Gerar o APK com `pnpm build:apk`
-- [ ] Executar a bateria de testes com o APK no emulador e no celular
+- [x] Rodar `npx eas-cli login` com a conta Expo do grupo
+- [x] Gerar o APK com `pnpm build:apk`
+- [x] Montar o emulador Android e instalar o APK (CT-12 verificado)
+- [ ] Executar os 13 casos restantes da bateria
 - [ ] Preencher os resultados em docs/TESTES-MANUAIS.md
-- [ ] Publicar o APK (Google Drive ou GitHub Releases) e colar o link no README
+- [x] Publicar o APK (Google Drive ou GitHub Releases) e colar o link no README
 - [ ] Gravar o vídeo de pitch de até 5 minutos (narração dos integrantes, sem IA)
 - [ ] Publicar o vídeo no YouTube como não listado e colar o link no README
-- [ ] Criar o repositório Sprint4-CrossPlatform-2026 e subir o código
-- [ ] Preencher os links em ENTREGA-SPRINT4.txt
+- [x] Criar o repositório Sprint4-CrossPlatform-2026 e subir o código
+- [ ] Preencher o link do vídeo em ENTREGA-SPRINT4.txt e no README

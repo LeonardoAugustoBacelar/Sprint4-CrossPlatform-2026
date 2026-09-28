@@ -35,6 +35,7 @@ intervenções de cada ponto da malha.
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Decisões técnicas](#decisões-técnicas)
 - [Testes](#testes)
+- [Pendências e limitações conhecidas](#pendências-e-limitações-conhecidas)
 - [Evolução por Sprint](#evolução-por-sprint)
 - [Plano de negócio](#plano-de-negócio)
 - [Participantes](#participantes)
@@ -368,6 +369,25 @@ verificou o comportamento do botão voltar, que a build web não conseguia exerc
 O que um emulador não reproduz são características de hardware físico: sensores, câmera,
 variação de desempenho entre aparelhos e personalizações de fabricante. **Nenhuma delas é
 usada pelo aplicativo**, que depende apenas de tela, toque e armazenamento local.
+
+---
+
+## Pendências e limitações conhecidas
+
+O que **não** está nesta entrega, declarado abertamente:
+
+| # | Pendência | Situação |
+|---|---|---|
+| 1 | **Camada de dados ainda simulada** | O serviço se comporta como backend (assíncrono, com latência e falhas), mas não há API real. A troca fica contida em `src/services/trechosApi.ts` |
+| 2 | **Sem autenticação** | Não há login nem controle de acesso por perfil. Em produção, coordenação e campo veriam recortes diferentes da malha |
+| 3 | **Sem seletor de data nativo** | A data é digitada com máscara progressiva e validação. Funciona, mas o seletor do sistema reduziria erro de digitação |
+| 4 | **Navegação por estado local** | O botão voltar do Android foi tratado, mas não há *deep link* nem URL por tela |
+| 5 | **Barra de abas com uma única aba** | A segunda aba prevista (indicadores) não entrou no escopo desta Sprint |
+| 6 | **Sem anexo de foto** | Evidência visual do trecho é o recurso que mais falta ao registro em campo |
+| 7 | **Testes em emulador** | A bateria roda com o APK sobre Android real, mas em hardware virtualizado — ver [Ambiente de execução](#ambiente-de-execução) |
+
+Nenhuma delas bloqueia os fluxos demonstrados: o aplicativo instala, opera e persiste os
+dados sem depender de qualquer um desses itens.
 
 ---
 
