@@ -11,7 +11,7 @@ Lucca Rosseto Rezende - RM 564180
 Guilherme Verrillo Peres - RM 563981
 
 REPOSITORIO GITHUB
-<COLAR AQUI O LINK DO REPOSITORIO SPRINT4>
+https://github.com/LeonardoAugustoBacelar/Sprint4-CrossPlatform-2026
 
 APK PARA DOWNLOAD (GOOGLE DRIVE / GITHUB RELEASES)
 <COLAR AQUI O LINK DO APK>

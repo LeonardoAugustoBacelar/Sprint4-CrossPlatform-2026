@@ -10,6 +10,9 @@ const BUNDLE_ID = "com.app.motivaapp";
 const config: ExpoConfig = {
   name: "Motiva",
   slug: "motiva-app",
+  // Conta Expo dona do projeto no EAS. Sem isso, o build para e pergunta
+  // qual conta usar, porque ha mais de uma com permissao.
+  owner: "leobacelarcunha",
   version: "4.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
@@ -66,6 +69,13 @@ const config: ExpoConfig = {
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  // Projeto no EAS. Como este config e dinamico (.ts), o eas-cli nao
+  // consegue gravar o id sozinho e ele precisa ficar aqui.
+  extra: {
+    eas: {
+      projectId: "311ad129-96c4-4645-a9c5-459b0e284184",
+    },
   },
 };
 
