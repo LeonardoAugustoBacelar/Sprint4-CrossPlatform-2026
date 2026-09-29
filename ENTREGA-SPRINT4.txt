@@ -17,7 +17,7 @@ APK PARA DOWNLOAD (GOOGLE DRIVE / GITHUB RELEASES)
 https://github.com/LeonardoAugustoBacelar/Sprint4-CrossPlatform-2026/releases/download/v4.0.0/Motiva-v4.0.0.apk
 
 VIDEO DE PITCH E DEMONSTRACAO (YOUTUBE, NAO LISTADO - ATE 5 MIN)
-<COLAR AQUI O LINK DO VIDEO>
+https://youtu.be/ddczkUFpBA8
 
 PLANO DE NEGOCIO
 docs/PLANO-DE-NEGOCIO.md

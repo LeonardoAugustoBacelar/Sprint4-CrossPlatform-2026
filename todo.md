@@ -33,10 +33,10 @@
 - [x] Rodar `npx eas-cli login` com a conta Expo do grupo
 - [x] Gerar o APK com `pnpm build:apk`
 - [x] Montar o emulador Android e instalar o APK (CT-12 verificado)
-- [ ] Executar os 13 casos restantes da bateria
-- [ ] Preencher os resultados em docs/TESTES-MANUAIS.md
+- [x] Executar os 13 casos restantes da bateria
+- [x] Preencher os resultados em docs/TESTES-MANUAIS.md
 - [x] Publicar o APK (Google Drive ou GitHub Releases) e colar o link no README
-- [ ] Gravar o vídeo de pitch de até 5 minutos (narração dos integrantes, sem IA)
-- [ ] Publicar o vídeo no YouTube como não listado e colar o link no README
+- [x] Gravar o vídeo de pitch de até 5 minutos (narração dos integrantes, sem IA)
+- [x] Publicar o vídeo no YouTube como não listado e colar o link no README
 - [x] Criar o repositório Sprint4-CrossPlatform-2026 e subir o código
-- [ ] Preencher o link do vídeo em ENTREGA-SPRINT4.txt e no README
+- [x] Preencher o link do vídeo em ENTREGA-SPRINT4.txt e no README
